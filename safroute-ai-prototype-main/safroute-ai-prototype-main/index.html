@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>SafeRoute AI - Real-time Accident Detection System</title>
+    <meta name="description" content="AI-powered accident detection and alert system monitoring live CCTV feeds with automatic emergency response alerts" />
+    <meta name="author" content="SafeRoute AI" />
+    
+    <!-- Content Security Policy - relaxed for ONNX runtime compatibility -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' blob:; img-src 'self' data: blob: https:; font-src 'self' data: blob:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; child-src 'self' blob:;">
+    
+    <!-- Prevent extension UI injection -->
+    <style>
+      /* Hide common extension-injected elements */
+      [data-extension-id],
+      [class*="extension"],
+      [id*="extension"],
+      [class*="browser-extension"],
+      [id*="browser-extension"],
+      iframe[src*="extension://"],
+      iframe[src*="chrome-extension://"],
+      iframe[src*="moz-extension://"],
+      div[class*="lovable"],
+      div[id*="lovable"],
+      svg[class*="heart-icon"],
+      svg[id*="heart-icon"],
+      img[src*="heart"],
+      img[alt*="heart"][alt*="icon"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      
+      /* Protect header from extension modifications */
+      header,
+      [role="banner"],
+      .header {
+        position: relative;
+        z-index: 9999;
+      }
+      
+      /* Prevent extension overlays */
+      body > div:not(#root):not([id^="react"]):not([class^="react"]) {
+        display: none !important;
+      }
+    </style>
+
+    <meta property="og:title" content="SafeRoute AI - Real-time Accident Detection" />
+    <meta property="og:description" content="Advanced AI system for instant accident detection and emergency response coordination" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@SafeRouteAI" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

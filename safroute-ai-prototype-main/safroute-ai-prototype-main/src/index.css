@@ -1,0 +1,246 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prevent browser extension UI injection */
+@layer base {
+  /* Hide extension-injected elements */
+  [data-extension-id],
+  [class*="extension"]:not([class*="component"]):not([class*="react"]),
+  [id*="extension"]:not([id*="react"]),
+  [class*="browser-extension"],
+  [id*="browser-extension"],
+  iframe[src*="extension://"],
+  iframe[src*="chrome-extension://"],
+  iframe[src*="moz-extension://"],
+  svg[class*="heart-icon"],
+  svg[id*="heart-icon"],
+  img[src*="heart"][alt*="icon"],
+  div[class*="lovable-logo"],
+  div[id*="lovable-logo"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+  
+  /* Protect header from extension overlays */
+  header,
+  [role="banner"] {
+    isolation: isolate;
+    contain: layout style paint;
+  }
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47% 11%;
+
+    /* Tech blue for primary actions and branding */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 91% 70%;
+
+    /* Light gray for secondary elements */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222.2 47% 11%;
+
+    /* Muted backgrounds and text */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent cyan for highlights */
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Alert red for danger/accidents */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --alert-glow: 0 84% 70%;
+
+    /* Success green for resolved status */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning yellow for pending */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(199 89% 48%) 100%);
+    --gradient-alert: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(14 91% 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(217 91% 97%) 0%, hsl(0 0% 100%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(217 91% 60% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(217 91% 60% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(217 91% 60% / 0.1);
+    --shadow-alert: 0 0 20px hsl(0 84% 60% / 0.3);
+    --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.4);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222.2 47% 11%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 95%;
+    --sidebar-accent-foreground: 222.2 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 222.2 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 91% 70%;
+
+    --secondary: 217 33% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --alert-glow: 0 84% 70%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 217 91% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(199 89% 48%) 100%);
+    --gradient-alert: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(14 91% 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(217 33% 15%) 0%, hsl(222.2 47% 11%) 100%);
+
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4);
+    --shadow-alert: 0 0 20px hsl(0 84% 60% / 0.5);
+    --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.5);
+
+    --sidebar-background: 217 33% 15%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 25%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .pulse-alert {
+    animation: pulse-alert 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .blink-marker {
+    animation: blink-marker 1.5s ease-in-out infinite;
+  }
+
+  .fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .slide-in-up {
+    animation: slide-in-up 0.5s ease-out;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .alert-glow {
+    box-shadow: var(--shadow-alert);
+  }
+}
+
+@keyframes pulse-alert {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes blink-marker {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
