@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,82 +10,13 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  ExternalLink,
+  AlertCircle,
 } from "lucide-react";
-import GoogleMapComponent from "@/components/GoogleMapComponent";
 import { useToast } from "@/components/ui/use-toast";
+import { useAccidentAlerts, markAlertNotNew } from "@/hooks/use-accident-alerts";
+import { markAlertNotNew as markNotNew } from "@/lib/accidentAlerts";
 
-interface Accident {
-  id: number;
-  severity: "Low" | "Medium" | "High" | "Critical";
-  vehicles: number;
-  roadType: "Highway" | "City" | "Junction";
-  time: string;
-  date: string;
-  trafficStatus: "Road Blocked" | "Diverted" | "Cleared";
-  lat: number;
-  lng: number;
-  location: string;
-  investigationStatus: "Pending" | "Under Investigation" | "Completed";
-}
-
-// Mock data - in production, this would come from an API
-const mockAccidents: Accident[] = [
-  {
-    id: 1,
-    severity: "Critical",
-    vehicles: 2,
-    roadType: "Highway",
-    time: "10:30 AM",
-    date: "2025-01-15",
-    trafficStatus: "Road Blocked",
-    lat: 12.9716,
-    lng: 77.5946,
-    location: "MG Road, Bangalore",
-    investigationStatus: "Pending",
-  },
-  {
-    id: 2,
-    severity: "High",
-    vehicles: 1,
-    roadType: "City",
-    time: "09:15 AM",
-    date: "2025-01-15",
-    trafficStatus: "Diverted",
-    lat: 13.0827,
-    lng: 80.2707,
-    location: "Anna Salai, Chennai",
-    investigationStatus: "Under Investigation",
-  },
-  {
-    id: 3,
-    severity: "Medium",
-    vehicles: 3,
-    roadType: "Junction",
-    time: "08:45 AM",
-    date: "2025-01-15",
-    trafficStatus: "Cleared",
-    lat: 12.9352,
-    lng: 77.6245,
-    location: "Koramangala Junction, Bangalore",
-    investigationStatus: "Completed",
-  },
-  {
-    id: 4,
-    severity: "Low",
-    vehicles: 2,
-    roadType: "City",
-    time: "07:20 AM",
-    date: "2025-01-15",
-    trafficStatus: "Cleared",
-    lat: 13.0358,
-    lng: 77.5970,
-    location: "Whitefield, Bangalore",
-    investigationStatus: "Completed",
-  },
-];
-
-const getSeverityColor = (severity: Accident["severity"]) => {
+const getSeverityColor = (severity: "Low" | "Medium" | "High" | "Critical") => {
   switch (severity) {
     case "Critical":
       return "bg-red-600 text-white";
@@ -100,7 +31,7 @@ const getSeverityColor = (severity: Accident["severity"]) => {
   }
 };
 
-const getTrafficStatusColor = (status: Accident["trafficStatus"]) => {
+const getTrafficStatusColor = (status: "Road Blocked" | "Diverted" | "Cleared") => {
   switch (status) {
     case "Road Blocked":
       return "bg-red-600 text-white";
@@ -114,46 +45,53 @@ const getTrafficStatusColor = (status: Accident["trafficStatus"]) => {
 };
 
 const PoliceDashboard = () => {
-  const [accidents, setAccidents] = useState<Accident[]>(mockAccidents);
-  const [selectedAccident, setSelectedAccident] = useState<Accident | null>(
-    null
-  );
+  const storedAlerts = useAccidentAlerts();
   const { toast } = useToast();
 
-  // Sort accidents by priority (Critical first)
-  const sortedAccidents = [...accidents].sort((a, b) => {
-    const severityOrder = { Critical: 4, High: 3, Medium: 2, Low: 1 };
-    return severityOrder[b.severity] - severityOrder[a.severity];
-  });
+  // Convert stored alerts to display format
+  const accidents = useMemo(() => {
+    return storedAlerts.map((a) => ({
+      id: a.id,
+      severity: a.severity,
+      vehicles: a.vehicles,
+      roadType: a.roadType,
+      time: new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      date: new Date(a.createdAt).toISOString().slice(0, 10),
+      trafficStatus: a.trafficStatus,
+      lat: a.lat,
+      lng: a.lng,
+      location: a.location,
+      investigationStatus: a.investigationStatus,
+      assignedHospital: a.assignedHospital,
+      assignedPoliceStation: a.assignedPoliceStation,
+      photoDataUrl: a.photoDataUrl,
+      isNew: a.isNew,
+    }));
+  }, [storedAlerts]);
 
-  const handleStatusChange = (id: number, status: Accident["investigationStatus"]) => {
-    setAccidents((prev) =>
-      prev.map((accident) =>
-        accident.id === id ? { ...accident, investigationStatus: status } : accident
-      )
-    );
+  // Sort accidents by priority (Critical first)
+  const sortedAccidents = useMemo(() => {
+    return [...accidents].sort((a, b) => {
+      const severityOrder = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+      return severityOrder[b.severity] - severityOrder[a.severity];
+    });
+  }, [accidents]);
+
+  const handleStatusChange = (alertId: string, status: "Pending" | "Under Investigation" | "Completed") => {
+    // In a real app, this would update the backend
+    // For now, we'll just show a toast
     toast({
       title: "Status Updated",
       description: `Investigation status changed to ${status}`,
     });
   };
 
-  const handleRoadCleared = (id: number) => {
-    setAccidents((prev) =>
-      prev.map((accident) =>
-        accident.id === id
-          ? { ...accident, trafficStatus: "Cleared" as const, investigationStatus: "Completed" as const }
-          : accident
-      )
-    );
+  const handleRoadCleared = (alertId: string) => {
+    // In a real app, this would update the backend
     toast({
       title: "Road Cleared",
       description: "Traffic status updated and investigation marked as completed",
     });
-  };
-
-  const handleViewOnGoogleMaps = (lat: number, lng: number) => {
-    window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
   };
 
   // Statistics
@@ -231,33 +169,56 @@ const PoliceDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Accident Overview Cards */}
+      {/* Accident Overview - Full Width */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Accident Overview</h2>
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Accident Overview</h2>
-          <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
-            {sortedAccidents.map((accident) => (
+          {sortedAccidents.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No accident alerts yet</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Upload an image or video on the main dashboard to detect accidents
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            sortedAccidents.map((accident) => (
               <Card
                 key={accident.id}
-                className={`transition-all hover:shadow-lg cursor-pointer ${
-                  selectedAccident?.id === accident.id
-                    ? "ring-2 ring-primary"
-                    : ""
+                className={`relative transition-all hover:shadow-lg ${
+                  accident.isNew ? "border-l-4 border-l-red-600" : ""
                 }`}
-                onClick={() => setSelectedAccident(accident)}
               >
+                {accident.isNew && (
+                  <Badge className="absolute top-2 right-2 bg-red-600 animate-pulse z-10">
+                    NEW
+                  </Badge>
+                )}
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Badge className={getSeverityColor(accident.severity)}>
                         {accident.severity}
                       </Badge>
-                      <span className="text-lg">Accident #{accident.id}</span>
+                      <span className="text-lg">Accident #{String(accident.id).slice(-6)}</span>
                     </CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
+                <CardContent className="space-y-4">
+                  {/* Show photo only for newest alert */}
+                  {accident.photoDataUrl && accident.isNew && (
+                    <div className="rounded-lg overflow-hidden border bg-muted">
+                      <img
+                        src={accident.photoDataUrl}
+                        alt={`Accident ${accident.id}`}
+                        className="w-full h-96 object-contain bg-black"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex items-center gap-2">
                       <Car className="h-4 w-4 text-muted-foreground" />
                       <div>
@@ -272,14 +233,16 @@ const PoliceDashboard = () => {
                         <p className="font-semibold">{accident.roadType}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">Time & Date</p>
-                      <p className="font-semibold text-sm">
-                        {accident.time} - {accident.date}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Time</p>
+                        <p className="font-semibold text-sm">{accident.time}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Date</p>
+                      <p className="font-semibold text-sm">{accident.date}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -289,6 +252,22 @@ const PoliceDashboard = () => {
                       <p className="font-semibold text-sm">{accident.location}</p>
                     </div>
                   </div>
+                  {(accident.assignedHospital || accident.assignedPoliceStation) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t">
+                      {accident.assignedPoliceStation && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Assigned Police</p>
+                          <p className="font-semibold text-sm">{accident.assignedPoliceStation}</p>
+                        </div>
+                      )}
+                      {accident.assignedHospital && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Hospital Notified</p>
+                          <p className="font-semibold text-sm">{accident.assignedHospital}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between pt-2 border-t">
                     <Badge className={getTrafficStatusColor(accident.trafficStatus)}>
                       {accident.trafficStatus}
@@ -310,8 +289,7 @@ const PoliceDashboard = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={() => {
                         handleStatusChange(accident.id, "Under Investigation");
                       }}
                     >
@@ -322,8 +300,7 @@ const PoliceDashboard = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={() => {
                         handleRoadCleared(accident.id);
                       }}
                     >
@@ -333,68 +310,7 @@ const PoliceDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Map View */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Location Map</h2>
-          {selectedAccident ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Accident #{selectedAccident.id} - {selectedAccident.location}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="relative h-[400px] rounded-lg overflow-hidden border">
-                  <GoogleMapComponent
-                    lat={selectedAccident.lat}
-                    lng={selectedAccident.lng}
-                    zoom={15}
-                  />
-                </div>
-                <div className="space-y-2 p-4 bg-muted rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Latitude:</span>
-                    <span className="font-mono font-semibold">
-                      {selectedAccident.lat.toFixed(6)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Longitude:</span>
-                    <span className="font-mono font-semibold">
-                      {selectedAccident.lng.toFixed(6)}
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() =>
-                    handleViewOnGoogleMaps(
-                      selectedAccident.lat,
-                      selectedAccident.lng
-                    )
-                  }
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View on Google Maps
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex items-center justify-center h-[500px]">
-                <div className="text-center space-y-2">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <p className="text-muted-foreground">
-                    Select an accident to view on map
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            ))
           )}
         </div>
       </div>
